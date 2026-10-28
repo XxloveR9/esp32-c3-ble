@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>视频遥控器 · 刷机主页</title>
+<meta name="description" content="ESP32-C3 Super Mini 固件，在浏览器里直接刷机，无需安装任何开发工具。">
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { font: 15px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; background: #f6f8fa; color: #24292f; }
+  .wrap { max-width: 660px; margin: 0 auto; padding: 32px 18px 60px; }
+  h1 { font-size: 27px; margin: 0 0 4px; }
+  h1 .g { color: #1a73e8; }
+  h1 .v { font-size: 13px; color: #8a8f98; font-weight: 400; vertical-align: middle; }
+  .sub { color: #57606a; margin: 0 0 20px; font-size: 14px; }
+  .card { background: #fff; border: 1px solid #d0d7de; border-radius: 12px; padding: 18px 20px; margin: 14px 0; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  .card > b { display: block; margin-bottom: 8px; }
+  ol, ul { padding-left: 22px; margin: 6px 0; }
+  li { margin: 5px 0; }
+  .go { font: 600 16px system-ui; padding: 13px 26px; border: 0; border-radius: 8px; background: #1a73e8; color: #fff; cursor: pointer; }
+  .go:hover { background: #1765cc; }
+  .bad { color: #cf222e; font-size: 13px; display: block; }
+  esp-web-install-button { --esp-tools-button-color: #fff; --esp-tools-button-background-color: #1a73e8; }
+  esp-web-install-button[install-unsupported] { display: none; }
+  .unsupported { display: none; color: #cf222e; }
+  esp-web-install-button[install-unsupported] ~ .unsupported { display: block; }
+  a { color: #0969da; }
+  .note { color: #57606a; font-size: 13px; }
+  code { background: #eff1f3; padding: 2px 6px; border-radius: 5px; font-size: 12.5px; word-break: break-all; }
+  .flags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .flag { background: #eff1f3; border: 1px solid #d0d7de; border-radius: 6px; padding: 3px 10px; font-size: 12.5px; color: #57606a; }
+  .warn { background: #fff8e5; border: 1px solid #f0b400; border-radius: 10px; padding: 14px 16px; font-size: 13.5px; color: #7a5c00; }
+  .warn b { color: #9a6700; }
+  .warn code { background: #fff; border: 1px solid #e6d9a8; }
+  .hint { background: #eef6ff; border: 1px solid #c8e0ff; border-radius: 10px; padding: 12px 16px; font-size: 13.5px; color: #0b4a8f; }
+  .foot { text-align: center; color: #8a8f98; font-size: 12.5px; margin-top: 24px; }
+</style>
+<script>
+/* 中文汉化层：把 ESP Web Tools 组件自带的英文界面（含 Shadow DOM 内的弹窗）实时替换为中文 */
+(function () {
+  var T = {
+    "Erase device": "擦除设备",
+    "Erase User Data": "擦除用户数据",
+    "Reset Device": "重置设备",
+    "Confirm Installation": "确认安装",
+    "Installation failed": "安装失败",
+    "Installation complete!": "安装完成！",
+    "Installation prepared": "固件已就绪",
+    "Preparing installation": "正在准备安装…",
+    "Preparing installation...": "正在准备安装…",
+    "Erasing device...": "正在擦除设备…",
+    "Erasing": "正在擦除…",
+    "Device erased": "设备已擦除",
+    "Installing": "正在安装…",
+    "Wrapping up": "正在收尾…",
+    "Writing complete": "写入完成",
+    "All done!": "全部完成！",
+    "Back": "返回",
+    "Next": "下一步",
+    "Continue": "继续",
+    "Close": "关闭",
+    "Cancel": "取消",
+    "Skip": "跳过",
+    "Connect": "连接",
+    "Install": "安装",
+    "install": "安装",
+    "update to": "更新为",
+    "?": "？",
+    "Try Again": "重试",
+    "Error": "错误",
+    "No port selected": "未选择端口",
+    "Scanning for networks": "正在扫描网络…",
+    "Connecting": "正在连接…",
+    "Port is not ready": "串口未就绪",
+    "Failed to download manifest": "清单文件下载失败",
+    "Improv initialization failed.": "设备初始化失败。",
+    "Failed to connect with the device": "无法连接到设备",
+    "Error while reading serial port": "读取串口时出错",
+    "Error while scanning for Wi-Fi networks": "扫描 Wi-Fi 网络时出错",
+    "Improv Wi-Fi Serial not detected": "未检测到设备的 Wi-Fi 配置通道",
+    "Device lost detected (NetworkError)": "设备连接已丢失",
+    "Guru Meditation Error detected": "检测到芯片崩溃（Guru Meditation Error）",
+    "Serial port is not ready. Close any other application using it and try again.": "串口未就绪。请关闭其他占用该串口的程序后重试。",
+    "Serial port is not readable/writable. Close any other application using it and try again.": "串口无法读写。请关闭其他占用该串口的程序后重试。",
+    "Could not auto-detect Flash size. defaulting to 4MB": "无法自动识别 Flash 容量，按 4MB 处理",
+    "If the chip does not respond to any further commands, consider using a lower baud rate.": "如果芯片对后续指令无响应，可以尝试降低波特率。",
+    "Trying to connect": "正在尝试连接…",
+    "Configure Wi-Fi": "配置 Wi-Fi",
+    "Connect to Wi-Fi": "连接 Wi-Fi",
+    "Change Wi-Fi": "更换 Wi-Fi",
+    "Logs & Console": "日志与控制台",
+    "Visit Device": "访问设备",
+    "Fund Development": "赞助开发",
+    "Download Logs": "下载日志"
+  };
+
+  var RULES = [
+    [/Do you want to erase the device before installing/, "确定要在安装"],
+    [/\?\s*All data on the device will be lost\./, " 之前擦除设备吗？设备上的所有数据都会丢失。"],
+    [/Do you want to reset your device and erase all user data from your\s*device\?/, "确定要重置设备并擦除设备上的全部用户数据吗？"],
+    [/Do you want to install/, "确定要安装"],
+    [/Do you want to update/, "确定要更新"],
+    [/Do you want to\s*$/, "确定要"],
+    [/All data on the device will be erased\./, "设备上的全部数据都会被擦除。"],
+    [/Your device is running/, "你的设备当前运行"],
+    [/This will take/, "预计需要"],
+    [/Keep this page visible to prevent slow down/, "请保持本页面可见，以免写入变慢"],
+    [/Writing progress:\s*(\d+)%/, "写入进度：$1%"],
+    [/^Connected to /, "已连接到 "],
+    [/^Install (.+)$/, "安装 $1"],
+    [/^Update (.+)$/, "更新 $1"],
+    [/^Unknown error \((.+)\)$/, "未知错误（$1）"],
+    [/^Initialized\. Found (.+)$/, "初始化完成，检测到 $1"],
+    [/^Your (.+) board is not supported\.$/, "不支持你的 $1 开发板。"],
+    [/^Downloading firmware (.+) failed: (\d+)$/, "固件下载失败：$1（状态码 $2）"],
+    [/Failed to initialize\. Try resetting your device or holding the BOOT button while clicking INSTALL\./, "初始化失败。请重置设备，或在点击「安装」时按住 BOOT 键。"],
+    [/If you didn't select a port because you didn't see your device\s*listed, try the following steps:/, "如果没看到你的设备、所以没有选择端口，可以按下面几步排查："],
+    [/Make sure that the device is connected to this computer \(the one\s*that runs the browser that shows this website\)/, "确认设备已连接到这台电脑（也就是当前打开本网页的电脑）。"],
+    [/Most devices have a tiny light when it are powered on\. If yours has one, make sure it's on\./, "大多数设备通电后会有小指示灯，如果有，请确认它是亮着的。"],
+    [/Make sure that the USB cable you use can be used for data and is\s*not a power-only cable\./, "确认所用的 USB 线支持数据传输，不是只能充电的线。"],
+    [/Make sure you have the right drivers installed\. Below are the\s*drivers for common chips used in ESP devices:/, "确认已装好对应驱动。以下是 ESP 设备常见芯片的驱动："],
+    [/\(download via blue button with .+ icon\)/, "（点击带该图标的蓝色按钮下载）"],
+    [/([\u4e00-\u9fa5])\.\s*$/, "$1。"],
+    [/^\?$/, "？"]
+  ];
+
+  function fixText(node) {
+    var raw = node.nodeValue;
+    if (!raw || raw.length > 600) return;
+    var t = raw.trim();
+    if (!t) return;
+    if (T[t] !== undefined) { node.nodeValue = raw.replace(t, T[t]); return; }
+    if (!/[A-Za-z]/.test(raw)) return;
+    var out = raw;
+    for (var k = 0; k < 4; k++) {
+      var changed = false;
+      for (var i = 0; i < RULES.length; i++) {
+        var re = RULES[i][0], rep = RULES[i][1];
+        if (re.test(out)) { out = out.replace(re, rep); changed = true; }
+      }
+      if (!changed) break;
+    }
+    if (out !== raw) node.nodeValue = out;
+  }
+
+  function walk(node) {
+    if (node.nodeType === 3) { fixText(node); return; }
+    if (node.nodeType === 1 && node.shadowRoot) walk(node.shadowRoot);
+    for (var c = node.firstChild; c; c = c.nextSibling) walk(c);
+  }
+
+  var pending = [], timer = false;
+  function schedule(root) {
+    if (pending.indexOf(root) === -1) pending.push(root);
+    if (timer) return;
+    timer = true;
+    setTimeout(function () {
+      timer = false;
+      var roots = pending; pending = [];
+      for (var i = 0; i < roots.length; i++) walk(roots[i]);
+    }, 0);
+  }
+
+  var mo = new MutationObserver(function (records) {
+    for (var i = 0; i < records.length; i++) {
+      var r = records[i].target;
+      var root = r.getRootNode ? r.getRootNode() : document;
+      schedule(root);
+    }
+  });
+
+  function watch(root) { try { mo.observe(root, { childList: true, subtree: true, characterData: true }); } catch (e) {} }
+
+  /* 组件用 attachShadow 创建 Shadow DOM，这里挂钩，确保新出现的界面也被翻译 */
+  if (window.Element && window.Element.prototype.attachShadow) {
+    var orig = window.Element.prototype.attachShadow;
+    window.Element.prototype.attachShadow = function () {
+      var root = orig.apply(this, arguments);
+      watch(root);
+      schedule(root);
+      return root;
+    };
+  }
+
+  function boot() {
+    watch(document);
+    walk(document.body);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>📱 <span class="g">蓝牙视频遥控器</span> <span class="v">固件 v2.2.1</span></h1>
+  <p class="sub">ESP32-C3 Super Mini · 手机蓝牙刷抖音/快手 · 就在这个页面直接刷机，不需要装任何开发工具</p>
+
+  <div class="card">
+    <p style="margin-top:0">把开发板用 <b>数据线</b>（不能是纯充电线）接到这台电脑，然后点下面的按钮：</p>
+    <esp-web-install-button manifest="./manifest.json">
+      <button slot="activate" class="go">⚡ 连接并安装</button>
+      <span slot="unsupported" class="unsupported">当前浏览器不支持刷机 — 请在电脑上使用 <b>Chrome</b> 或 <b>Edge</b>。</span>
+      <span slot="not-allowed" class="unsupported">你需要允许访问串口才能继续。</span>
+    </esp-web-install-button>
+    <div class="flags">
+      <span class="flag">Chrome / Edge · 电脑端</span>
+      <span class="flag">约 30 秒完成</span>
+      <span class="flag">已内置 OTA 升级分区</span>
+      <span class="flag">完全离线可用</span>
+    </div>
+  </div>
+
+  <div class="warn" id="filewarn" style="display:none">
+    <b>⚠️ 你现在是直接双击打开的（file:// 方式），浏览器不允许这样烧录</b>
+    <p style="margin:8px 0 4px">出于安全限制，浏览器禁止网页在 <code>file://</code> 下读取本地固件文件（manifest.json、firmware.bin），也禁止加载本地模块脚本，所以按钮不会有反应。</p>
+    <p style="margin:4px 0 8px"><b>解决办法（任选一个，一分钟搞定）：</b></p>
+    <ol>
+      <li><b>双击同目录的「启动烧录服务.cmd」</b> —— 它会自己起一个本地小服务器并自动打开浏览器（推荐）。</li>
+      <li>在 PowerShell 里执行：<br><code>cd "这个文件夹的路径"; node server.js</code></li>
+      <li>或者用 Python：<br><code>cd "这个文件夹的路径"; python -m http.server 8930</code><br>然后浏览器访问 <code>http://localhost:8930/</code></li>
+    </ol>
+    <p style="margin:6px 0 0">服务启动后，浏览器地址栏要显示 <code>http://localhost:8930/</code>，而不是 <code>file:///...</code>。</p>
+  </div>
+
+  <div class="card">
+    <b>刷机流程</b>
+    <ol>
+      <li>用 <b>数据线</b>连接开发板 → 点 <b>连接并安装</b> → 在弹窗里选对应的串口（CH340 / CP210x / USB JTAG 之类）。</li>
+      <li>首次刷机建议勾选「擦除设备」，等待写入完成（约 30 秒）。</li>
+      <li>刷完按板上的 <b>RST</b> 键复位。</li>
+      <li>手机蓝牙搜索 <code>视频遥控器</code> 配对（不需要 PIN 码）→ 打开抖音/快手 → 板载 BOOT 键：<b>短按＝下一个视频</b>、<b>双击＝上一个</b>、<b>长按＝暂停</b>。</li>
+      <li>手机连 WiFi 热点 <code>视频遥控器</code>（密码 <code>12345678</code>），会自动弹出配置页，可以调滑动距离、灵敏度、落点位置等参数。</li>
+    </ol>
+  </div>
+
+  <div class="hint">
+    <b>💡 以后升级固件不用数据线了</b><br>
+    手机或电脑连上设备的热点后，访问 <code>192.168.4.1/update</code>，把新的 <code>firmware.bin</code> 拖进去上传即可（网页 OTA）。<br>
+    这个烧录页只在「第一次刷机」或「OTA 也进不去」时才需要用。
+  </div>
+
+  <div class="card">
+    <b>找不到串口 / 烧录失败？</b>
+    <ol>
+      <li>确认 USB 线支持数据传输，不是纯充电线。</li>
+      <li>拔掉 USB → 按住板上的 <b>BOOT</b> 键不放 → 重新插上 USB 再松开 → 再点一次安装。</li>
+      <li>关掉其他占用串口的软件（串口助手、Arduino IDE 串口监视器、这个页面之前的旧标签页）。</li>
+      <li>换电脑端 <b>Chrome</b> 或 <b>Edge</b>，不要用手机浏览器刷机。</li>
+      <li>Windows 上如果连串口都看不到，先装对应 USB 驱动（CH340 / CP210x）。</li>
+    </ol>
+  </div>
+
+  <p class="foot">ESP Web Tools v10 · 已本地化，断网也能刷 · 固件 v2.2.1</p>
+</div>
+
+<script type="module">
+/* 组件已本地化到 ./_webtools/，通过动态 import 加载；
+   file:// 下加载会失败，这里捕获后给出「怎么启动本地服务」的提示；
+   若本地文件缺失，则退回 CDN。 */
+import('./_webtools/install-button.js')
+  .catch(function () {
+    return import('https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module')
+      .catch(function () {
+        var w = document.getElementById('filewarn');
+        if (w) w.style.display = 'block';
+      });
+  });
+</script>
+</body>
+</html>
